@@ -38,3 +38,54 @@ a { color: var(--link); }
 .card p { margin: 0.25rem 0; }
 footer { margin-top: 3rem; padding-top: 1rem; padding-bottom: 2rem; border-top: 1px solid var(--rule); color: var(--muted); font-size: 0.9rem; }
 footer a { color: var(--muted); margin-right: 1rem; }
+
+/* The Growth Planner calculator. */
+:root { --balance: #2f6fd0; --paid: #e2632d; --real: #20a464; --problem: #c4342b; }
+@media (prefers-color-scheme: dark) {
+  :root { --balance: #5c9cf5; --paid: #f0814f; --real: #3cc581; --problem: #ff6b61; }
+}
+.calculator { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem 1rem; margin: 1.5rem 0; }
+.field { display: flex; flex-direction: column; gap: 0.25rem; }
+.field label { font-size: 0.9rem; color: var(--muted); }
+.field input, .field select {
+  font: inherit; color: var(--text); background: var(--card); border: 1px solid var(--rule);
+  border-radius: 10px; padding: 0.55rem 0.75rem; width: 100%;
+}
+.field input:focus, .field select:focus { outline: 2px solid var(--link); outline-offset: 1px; }
+.field input, .field select { -webkit-appearance: none; appearance: none; }
+.field input::-webkit-outer-spin-button, .field input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.field input[type=number] { -moz-appearance: textfield; }
+.field select {
+  padding-right: 2.25rem; cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%238e8e93' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 0.85rem center;
+}
+.card h2 { margin-top: 0.25rem; }
+@media (max-width: 480px) { .calculator { grid-template-columns: 1fr; } }
+.results .label { color: var(--muted); margin: 0; }
+.results .big { font-size: 2.6rem; font-weight: 700; line-height: 1.1; margin: 0.1rem 0 0.25rem; font-variant-numeric: tabular-nums; }
+.results .sentence { color: var(--muted); font-size: 0.95rem; margin-top: 0; }
+.problem { color: var(--problem); }
+.rows { margin: 1rem 0; }
+.rows div { display: flex; justify-content: space-between; gap: 1rem; padding: 0.3rem 0; border-bottom: 1px solid var(--rule); }
+.rows dt { margin: 0; }
+.rows dd { margin: 0; font-variant-numeric: tabular-nums; color: var(--muted); }
+.rows .strong dt, .rows .strong dd { font-weight: 600; color: var(--text); }
+.chart { margin: 1.5rem 0 0; }
+.chart svg { width: 100%; height: auto; display: block; }
+.chart .grid { stroke: var(--rule); stroke-width: 1; }
+.chart .axis { fill: var(--muted); font-size: 16px; }
+.chart .line { fill: none; stroke-width: 3; stroke-linejoin: round; }
+.chart .line.balance { stroke: var(--balance); }
+.chart .line.paid { stroke: var(--paid); }
+.chart .line.real { stroke: var(--real); stroke-dasharray: 8 6; }
+.chart .area { fill: var(--balance); opacity: 0.1; }
+.legend { display: flex; gap: 1rem; flex-wrap: wrap; font-size: 0.85rem; color: var(--muted); margin-top: 0.5rem; }
+.key::before { content: ""; display: inline-block; width: 0.7em; height: 0.7em; border-radius: 50%; margin-right: 0.35em; vertical-align: 0; }
+.key.balance::before { background: var(--balance); }
+.key.paid::before { background: var(--paid); }
+.key.real::before { background: var(--real); }
+.small { font-size: 0.85rem; color: var(--muted); }
+.muted { color: var(--muted); }
+
+[hidden] { display: none !important; }

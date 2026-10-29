@@ -3,25 +3,244 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Growth Planner</title>
+  <title>Compound Interest Calculator with Fees and Inflation | Growth Planner</title>
+  <meta name="description" content="Free compound interest calculator. See what your savings could grow to with regular contributions, fees and inflation, including what it's worth in today's money. No sign-up.">
+  <link rel="canonical" href="https://spirit-seven.com/growth-planner/">
+  <!-- Once the app is on the App Store, offer it to iPhone and iPad visitors (Smart App Banner):
+  <meta name="apple-itunes-app" content="app-id=APP_ID"> -->
   <link rel="stylesheet" href="/style.css">
+  <script src="/growth-planner/engine.js"></script>
 </head>
 <body>
   <header><a href="/">Spirit Seven</a></header>
   <main>
-    <h1>Growth Planner</h1>
-    <p class="lede">A compound interest calculator for iPhone and iPad.</p>
-    <p>Enter a starting balance, how much you pay in and the growth you expect. Growth Planner shows
-      your projected balance year by year, with fees and inflation, including what it would be worth
-      in today's money.</p>
-    <p>Everything stays on your device. No account, no sign-in, no tracking.</p>
-    <ul>
-      <li><a href="/growth-planner/support/">Support</a></li>
-      <li><a href="/growth-planner/privacy/">Privacy policy</a></li>
-    </ul>
+    <h1>Compound interest calculator</h1>
+    <p class="lede">See what your savings could grow to, with fees and inflation included. Free, and nothing to sign up for.</p>
+
+    <form id="calculator" class="calculator" novalidate>
+      <div class="field">
+        <label for="currency">Currency</label>
+        <select id="currency">
+          <option value="GBP">£ Pounds</option>
+          <option value="USD">$ US dollars</option>
+          <option value="CAD">$ Canadian dollars</option>
+          <option value="AUD">$ Australian dollars</option>
+          <option value="EUR">€ Euros</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="initial">Starting balance</label>
+        <input id="initial" type="number" inputmode="decimal" min="0" max="1000000000" step="any">
+      </div>
+      <div class="field">
+        <label for="monthly">Paid in each month</label>
+        <input id="monthly" type="number" inputmode="decimal" min="0" max="1000000000" step="any">
+      </div>
+      <div class="field">
+        <label for="years">Years</label>
+        <input id="years" type="number" inputmode="numeric" min="1" max="100" step="1" value="25">
+      </div>
+      <div class="field">
+        <label for="growth">Growth a year (%)</label>
+        <input id="growth" type="number" inputmode="decimal" min="-99" max="100" step="any" value="5">
+      </div>
+      <div class="field">
+        <label for="fees">Fees a year (%)</label>
+        <input id="fees" type="number" inputmode="decimal" min="0" max="50" step="any" value="0">
+      </div>
+      <div class="field">
+        <label for="inflation">Inflation a year (%)</label>
+        <input id="inflation" type="number" inputmode="decimal" min="-50" max="100" step="any" value="2">
+      </div>
+    </form>
+
+    <section class="results" aria-live="polite">
+      <p id="problem" class="problem" hidden></p>
+      <div id="answer">
+        <p class="label">Projected balance</p>
+        <p id="balance" class="big"></p>
+        <p id="sentence" class="sentence"></p>
+        <dl class="rows">
+          <div class="strong"><dt>In today’s money</dt><dd id="real"></dd></div>
+          <div><dt>Starting balance</dt><dd id="startRow"></dd></div>
+          <div><dt>Paid in</dt><dd id="paidRow"></dd></div>
+          <div class="strong"><dt>Total paid in</dt><dd id="totalRow"></dd></div>
+          <div><dt>Growth</dt><dd id="growthRow"></dd></div>
+          <div id="feesLine"><dt>Fees</dt><dd id="feesRow"></dd></div>
+        </dl>
+        <figure class="chart">
+          <svg id="chart" viewBox="0 0 640 300" role="img" aria-labelledby="chartTitle">
+            <title id="chartTitle">Balance, total paid in and today’s money over time</title>
+          </svg>
+          <figcaption class="legend">
+            <span class="key balance">Balance</span>
+            <span class="key paid">Total paid in</span>
+            <span class="key real">Today’s money</span>
+          </figcaption>
+        </figure>
+      </div>
+      <p class="small">Projections are estimates based on the assumptions you choose. They aren’t guaranteed and aren’t financial advice. Actual returns, fees and inflation will vary, and the value of investments can fall as well as rise.</p>
+    </section>
+
+    <section class="card">
+      <h2>Go further with Growth Planner</h2>
+      <p>The app for iPhone and iPad is free to download, and does all of this and more:</p>
+      <ul>
+        <li><strong>Try a what-if:</strong> pay in more, retire later, or assume different growth, and see the difference.</li>
+        <li><strong>Reach a goal:</strong> find what to pay in, or how long it takes, to reach a target.</li>
+        <li>Save your plans, pay in quarterly or yearly, raise payments each year, and share a PDF report.</li>
+      </ul>
+      <p>No subscription, no ads, no account. Your plans stay on your device.</p>
+      <p id="appStore" class="muted">Coming soon to the App Store.</p>
+    </section>
+
+    <h2>How it works</h2>
+    <p>The balance grows monthly at the yearly growth rate you enter, so 12% growth turns 1,000
+      into exactly 1,120 over a year. Fees are taken monthly as a share of the balance, and
+      payments go in at the end of each month. “Today’s money” divides by inflation to that date,
+      so it shows what the balance would buy now.</p>
   </main>
   <footer>
+    <a href="/growth-planner/support/">Support</a>
+    <a href="/growth-planner/privacy/">Privacy policy</a>
     <a href="mailto:support@spirit-seven.com">support@spirit-seven.com</a>
   </footer>
+
+  <script>
+    (function () {
+      var $ = function (id) { return document.getElementById(id); };
+      var fields = ["currency", "initial", "monthly", "years", "growth", "fees", "inflation"];
+      // Starter amounts as the app scales them: a Canadian or Australian dollar buys about
+      // half what a pound does.
+      var scale = { GBP: 1, USD: 1, EUR: 1, CAD: 2, AUD: 2 };
+      var regionCurrency = { US: "USD", CA: "CAD", AU: "AUD", GB: "GBP", IE: "EUR", DE: "EUR", FR: "EUR",
+                             ES: "EUR", IT: "EUR", NL: "EUR", BE: "EUR", AT: "EUR", PT: "EUR", FI: "EUR" };
+      var limits = {
+        initial: [0, 1e9, "Starting balance"], monthly: [0, 1e9, "Paid in each month"],
+        years: [1, 100, "Years"], growth: [-99, 100, "Growth"], fees: [0, 50, "Fees"],
+        inflation: [-50, 100, "Inflation"],
+      };
+      var language = navigator.language || "en-GB";
+
+      function setStarterAmounts(code) {
+        $("initial").value = 10000 * scale[code];
+        $("monthly").value = 250 * scale[code];
+      }
+
+      var region = (language.split("-")[1] || "").toUpperCase();
+      var startCurrency = regionCurrency[region] || "GBP";
+      $("currency").value = startCurrency;
+      setStarterAmounts(startCurrency);
+
+      function money(value, code) {
+        var rounded = Math.round(value);
+        return new Intl.NumberFormat(language, {
+          style: "currency", currency: code, maximumFractionDigits: 0, minimumFractionDigits: 0,
+        }).format(rounded === 0 ? 0 : rounded);
+      }
+
+      function read() {
+        var values = {}, problems = [];
+        Object.keys(limits).forEach(function (key) {
+          var raw = $(key).value.trim();
+          var number = Number(raw);
+          var bounds = limits[key];
+          if (raw === "" || !isFinite(number)) {
+            problems.push(bounds[2] + " needs a number.");
+          } else if (number < bounds[0] || number > bounds[1]) {
+            problems.push(bounds[2] + " must be between " + bounds[0].toLocaleString(language) +
+                          " and " + bounds[1].toLocaleString(language) + ".");
+          } else if (key === "years" && number !== Math.floor(number)) {
+            problems.push("Years must be a whole number.");
+          }
+          values[key] = number;
+        });
+        return { values: values, problems: problems };
+      }
+
+      function drawChart(points, code) {
+        var svg = $("chart");
+        while (svg.childNodes.length > 1) svg.removeChild(svg.lastChild);
+        var ns = "http://www.w3.org/2000/svg";
+        var left = 8, right = 560, top = 12, bottom = 260;
+        var max = 0;
+        points.forEach(function (p) { max = Math.max(max, p.balance, p.paidIn, p.real); });
+        if (max <= 0) max = 1;
+        // A tidy top for the scale: 1, 2, 2.5 or 5 times a power of ten.
+        var power = Math.pow(10, Math.floor(Math.log10(max)));
+        var scaleTop = [1, 2, 2.5, 5, 10].map(function (m) { return m * power; })
+          .filter(function (v) { return v >= max; })[0];
+        var lastMonth = points[points.length - 1].month || 1;
+        function x(month) { return left + (right - left) * month / lastMonth; }
+        function y(value) { return bottom - (bottom - top) * Math.max(0, value) / scaleTop; }
+        function el(name, attrs) {
+          var node = document.createElementNS(ns, name);
+          Object.keys(attrs).forEach(function (k) { node.setAttribute(k, attrs[k]); });
+          svg.appendChild(node);
+          return node;
+        }
+        [0, 0.5, 1].forEach(function (f) {
+          el("line", { x1: left, x2: right, y1: y(scaleTop * f), y2: y(scaleTop * f), class: "grid" });
+          el("text", { x: right + 8, y: y(scaleTop * f) + 5, class: "axis" }).textContent =
+            new Intl.NumberFormat(language, { style: "currency", currency: code, notation: "compact" })
+              .format(scaleTop * f);
+        });
+        var years = lastMonth / 12;
+        var tick = years > 40 ? 20 : years > 15 ? 10 : years > 6 ? 5 : 1;
+        for (var t = 0; t <= years + 1e-9; t += tick) {
+          el("text", { x: x(t * 12), y: bottom + 24, class: "axis", "text-anchor": t === 0 ? "start" : "middle" })
+            .textContent = t + (t === 0 ? " years" : "");
+        }
+        var area = points.map(function (p) { return x(p.month) + "," + y(p.balance); });
+        area.push(x(lastMonth) + "," + bottom, x(0) + "," + bottom);
+        el("polygon", { points: area.join(" "), class: "area" });
+        ["paidIn", "real", "balance"].forEach(function (key) {
+          el("polyline", { points: points.map(function (p) { return x(p.month) + "," + y(p[key]); }).join(" "),
+                           class: "line " + (key === "paidIn" ? "paid" : key) });
+        });
+      }
+
+      function update() {
+        var code = $("currency").value;
+        var input = read();
+        $("problem").hidden = input.problems.length === 0;
+        $("problem").textContent = input.problems.join(" ");
+        $("answer").hidden = input.problems.length > 0;
+        if (input.problems.length) return;
+
+        var v = input.values;
+        var result = GrowthEngine.project({
+          initialBalance: v.initial, contribution: v.monthly, frequencyMonths: 1, timing: "end",
+          durationMonths: v.years * 12, annualReturn: v.growth / 100, annualFee: v.fees / 100,
+          annualInflation: v.inflation / 100,
+        });
+        // Whole units, with growth as whatever makes the rows add up, as the app shows them.
+        var balance = Math.round(result.finalBalance), start = Math.round(v.initial);
+        var paid = Math.round(result.totalContributions), fees = Math.round(result.totalFees);
+        var growth = balance - start - paid + fees;
+
+        $("balance").textContent = money(balance, code);
+        $("sentence").textContent = "After " + v.years + (v.years === 1 ? " year" : " years") + " at " +
+          v.growth + "% a year, paying in " + money(v.monthly, code) + " monthly" +
+          (v.fees ? ", with " + v.fees + "% fees." : ".");
+        $("real").textContent = money(result.finalRealBalance, code);
+        $("startRow").textContent = money(start, code);
+        $("paidRow").textContent = money(paid, code);
+        $("totalRow").textContent = money(start + paid, code);
+        $("growthRow").textContent = money(growth, code);
+        $("feesLine").hidden = fees === 0;
+        $("feesRow").textContent = "−" + money(fees, code);
+        drawChart(result.points, code);
+      }
+
+      $("currency").addEventListener("change", function () {
+        setStarterAmounts($("currency").value);
+        update();
+      });
+      fields.forEach(function (id) { $(id).addEventListener("input", update); });
+      $("calculator").addEventListener("submit", function (e) { e.preventDefault(); });
+      update();
+    })();
+  </script>
 </body>
 </html>
