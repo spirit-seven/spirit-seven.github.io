@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Growth Planner Privacy Policy</title>
   <link rel="stylesheet" href="/style.css">
+  <script src="/growth-planner/analytics.js"></script>
 </head>
 <body>
   <header><a href="/growth-planner/">Growth Planner</a></header>
@@ -38,6 +39,18 @@
     <h2>Children</h2>
     <p>The app doesn't knowingly collect any information from anyone, including children.</p>
 
+    <h2>This website</h2>
+    <p>The sections above are about the app. This website uses Cloudflare Web Analytics to count
+      visits, so we can see how people find it and improve it. It doesn't use cookies or identify
+      you. We see totals only, such as pages visited, the site people came from, and their
+      country, browser and device type. The calculator's figures stay in your browser and
+      aren't sent anywhere.</p>
+    <p>You can stop your visits being counted in this browser:
+      <a href="#" id="visitCount">Don't count my visits</a></p>
+    <p>The site is hosted on GitHub Pages, which logs visitors' IP addresses for security.
+      GitHub's privacy statement is at
+      <a href="https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement">docs.github.com</a>.</p>
+
     <h2>Changes</h2>
     <p>If this policy changes, the new version will be posted at this address with a new date.</p>
 
@@ -49,5 +62,32 @@
     <a href="/growth-planner/support/">Support</a>
     <a href="mailto:support@spirit-seven.com">support@spirit-seven.com</a>
   </footer>
+
+  <script>
+    const visitCount = document.getElementById("visitCount");
+
+    function isCounted() {
+      try {
+        return !localStorage.getItem("noVisitCount");
+      } catch (e) {
+        return true;
+      }
+    }
+
+    function showVisitCount() {
+      visitCount.textContent = isCounted() ? "Don't count my visits" : "Count my visits again";
+    }
+
+    visitCount.addEventListener("click", function (event) {
+      event.preventDefault();
+      try {
+        if (isCounted()) localStorage.setItem("noVisitCount", "1");
+        else localStorage.removeItem("noVisitCount");
+      } catch (e) {}
+      showVisitCount();
+    });
+
+    showVisitCount();
+  </script>
 </body>
 </html>
